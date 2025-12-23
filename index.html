@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ein kleines Weihnachtsgeschenk</title>
+
+<style>
+:root{
+  --bg1:#0f1f18;
+  --bg2:#1b3a2f;
+  --red1:#7a0c18;
+  --red2:#b11226;
+  --red3:#d61f3c;
+  --gold1:#c9a000;
+  --gold2:#ffd966;
+}
+*{box-sizing:border-box}
+
+/* ===== BODY ===== */
+body{
+  margin:0;
+  font-family: Georgia, serif;
+  background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+  color:#fff;
+  overflow:hidden;
+}
+
+/* ===== PASSWORT ===== */
+#pw-overlay{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at top, var(--bg2), var(--bg1));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  transition:opacity 1s ease;
+}
+#pw-overlay.fadeout{opacity:0;pointer-events:none}
+
+.pw-box{
+  background:rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  border-radius:22px;
+  padding:38px 34px;
+  text-align:center;
+  max-width:380px;
+  width:90%;
+}
+.pw-box input{
+  width:100%;
+  padding:14px;
+  font-size:20px;
+  border-radius:10px;
+  border:none;
+  text-align:center;
+  letter-spacing:4px;
+}
+#pw-error{
+  display:none;
+  margin-top:12px;
+  font-size:14px;
+  opacity:.85;
+}
+.shake{animation:shake .4s}
+@keyframes shake{
+  25%{transform:translateX(-6px)}
+  50%{transform:translateX(6px)}
+}
+
+/* ===== STAGES ===== */
+.stage{
+  min-height:100vh;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:24px;
+}
+.stage.active{display:flex}
+
+/* ===== GESCHENK ===== */
+.scene{margin-bottom:18px}
+.gift{
+  width:260px;height:200px;
+  margin:0 auto;
+  perspective:900px;
+}
+.box{
+  position:absolute;bottom:0;left:0;right:0;
+  height:150px;
+  background:linear-gradient(145deg,var(--red2),var(--red1));
+  border-radius:16px;
+  box-shadow:0 30px 55px rgba(0,0,0,.55);
+}
+.lid{
+  position:absolute;top:0;left:0;right:0;height:60px;
+  background:linear-gradient(145deg,var(--red3),#9b1328);
+  border-radius:16px 16px 0 0;
+  transform-origin:top center;
+  transition:transform 1.3s cubic-bezier(.22,.61,.36,1);
+}
+.ribbon.v{
+  position:absolute;top:0;bottom:0;left:50%;
+  width:18px;transform:translateX(-50%);
+  background:linear-gradient(145deg,var(--gold2),var(--gold1));
+}
+.ribbon.h{
+  position:absolute;left:0;right:0;top:50%;
+  height:18px;transform:translateY(-50%);
+  background:linear-gradient(145deg,var(--gold2),var(--gold1));
+}
+.float{animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px)}}
+.gift.open .lid{transform:rotateX(140deg)}
+
+/* ===== TEXT ===== */
+.text-scroll{
+  max-height:70vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.text-scroll::-webkit-scrollbar{width:0}
+.text-scroll{scrollbar-width:none}
+
+/* Text nicht klickbar */
+#textBox p{pointer-events:none;}
+#textBox{pointer-events:auto;}
+#textBox button{pointer-events:auto;}
+
+.card{
+  max-width:720px;
+  background:rgba(0,0,0,.18);
+  backdrop-filter: blur(6px);
+  border-radius:24px;
+  padding:34px 32px 140px;
+  line-height:1.65;
+}
+
+/* Hinweis */
+.scroll-hint{
+  text-align:center;
+  font-size:14px;
+  opacity:0;
+  margin-top:20px;
+  transition:opacity .6s ease;
+}
+.scroll-hint.show{opacity:.65}
+
+/* ===== BUTTON ===== */
+.sticky-btn{
+  position:sticky;
+  bottom:0;
+  margin-top:28px;
+  padding-top:18px;
+  padding-bottom:10px;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.6),
+    rgba(0,0,0,.2),
+    rgba(0,0,0,0)
+  );
+}
+
+button{
+  padding:14px 26px;
+  border-radius:12px;
+  border:none;
+  font-size:16px;
+  cursor:not-allowed;
+  opacity:.35;
+  background:linear-gradient(145deg,#aaa,#777);
+  transition:all .4s ease;
+}
+
+button.ready{
+  cursor:pointer;
+  opacity:1;
+  background:linear-gradient(145deg,var(--gold2),var(--gold1));
+  color:#000;
+  animation:glow 4s ease-in-out infinite;
+}
+@keyframes glow{
+  0%,100%{box-shadow:0 0 0 rgba(255,215,130,0)}
+  50%{box-shadow:0 0 14px rgba(255,215,130,.35)}
+}
+
+/* ===== SCHNEE ===== */
+canvas{position:fixed;inset:0;z-index:0}
+.content{position:relative;z-index:1}
+</style>
+</head>
+
+<body>
+
+<!-- PASSWORT -->
+<div id="pw-overlay">
+  <div class="pw-box" id="pw-box">
+    <h2>Ein kleines Geheimnis ✨</h2>
+    <p>Das Passwort ist eine Uhrzeit,<br>die dir sehr viel bedeutet.</p>
+    <input id="pw-input" inputmode="numeric" maxlength="4" placeholder="••••">
+    <div id="pw-error">Das Passwort stimmt leider nicht.</div>
+  </div>
+</div>
+
+<canvas id="snow"></canvas>
+
+<!-- START -->
+<section id="s1" class="stage active">
+  <div class="content">
+    <div class="scene">
+      <div class="gift float" id="gift">
+        <div class="lid"></div>
+        <div class="box"></div>
+        <div class="ribbon v"></div>
+        <div class="ribbon h"></div>
+      </div>
+    </div>
+    <button class="ready" onclick="openGift()">🎁 Geschenk öffnen</button>
+  </div>
+</section>
+
+<!-- TEXT -->
+<section id="s2" class="stage">
+  <div class="content card text-scroll" id="textBox">
+
+    <p>Ich wünsche dir und Antonia von ganzem Herzen frohe Weihnachten🎄🎁</p>
+    <p>Ich weiß, wie sehr du es liebst, besondere Augenblicke festzuhalten – diese kleinen, echten Momente, die viel zu schnell vergehen.</p>
+    <p>Ich erinnere mich noch gut an das Gespräch – und ja, auch an den Streit.</p>
+    <p>Unsere momentane Situation ist nicht leicht. Sie ist kompliziert.</p>
+    <p>Ich hoffe sehr, dass dieses Geschenk dir ein Lächeln ins Gesicht zaubert. 🙊✨</p>
+
+    <div class="scroll-hint" id="scrollHint">Du bist fast da …</div>
+
+    <div class="sticky-btn">
+      <button id="finalBtn" onclick="showGift()">🎁 Geschenk erhalten</button>
+    </div>
+  </div>
+</section>
+
+<!-- PDF -->
+<section id="s3" class="stage">
+  <div class="content" style="width:100%;max-width:900px">
+    <iframe src="Gutschein Janica.pdf" style="width:100%;height:75vh;border:none;background:#fff"></iframe>
+  </div>
+</section>
+
+<script>
+/* ===== PASSWORT ===== */
+const PASSWORD="2332";
+const input=document.getElementById("pw-input");
+const box=document.getElementById("pw-box");
+const err=document.getElementById("pw-error");
+
+window.addEventListener("load",()=>input.focus());
+
+input.addEventListener("input",()=>{
+  input.value=input.value.replace(/[^0-9]/g,"");
+  if(input.value.length===4) checkPW();
+});
+
+function checkPW(){
+  if(input.value===PASSWORD){
+    const overlay=document.getElementById("pw-overlay");
+    overlay.classList.add("fadeout");
+    setTimeout(()=>overlay.remove(),1000);
+  }else{
+    err.style.display="block";
+    box.classList.remove("shake");
+    void box.offsetWidth;
+    box.classList.add("shake");
+    input.value="";
+    setTimeout(()=>input.focus(),300);
+  }
+}
+
+/* ===== ABLAUF ===== */
+const s1=document.getElementById('s1');
+const s2=document.getElementById('s2');
+const s3=document.getElementById('s3');
+const gift=document.getElementById('gift');
+const textBox=document.getElementById('textBox');
+const finalBtn=document.getElementById('finalBtn');
+const scrollHint=document.getElementById('scrollHint');
+
+function openGift(){
+  if(gift.classList.contains("open")) return;
+  gift.classList.add('open');
+
+  setTimeout(()=>{
+    s1.classList.remove('active');
+    s2.classList.add('active');
+    textBox.scrollTop=0;
+    finalBtn.classList.remove("ready");
+    scrollHint.classList.remove("show");
+
+    if(textBox.scrollHeight <= textBox.clientHeight){
+      finalBtn.classList.add("ready");
+    }
+  },1400);
+}
+
+/* Scroll-Logik */
+textBox.addEventListener("scroll",()=>{
+  const progress = textBox.scrollTop + textBox.clientHeight;
+  const max = textBox.scrollHeight;
+
+  if(progress > max * 0.75){
+    scrollHint.classList.add("show");
+  }
+  if(progress >= max - 5){
+    finalBtn.classList.add("ready");
+    scrollHint.classList.remove("show");
+  }
+});
+
+function showGift(){
+  if(!finalBtn.classList.contains("ready")) return;
+  s2.classList.remove('active');
+  s3.classList.add('active');
+}
+
+/* ===== SCHNEE ===== */
+const c=document.getElementById('snow');
+const x=c.getContext('2d');
+function resize(){c.width=innerWidth;c.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+let flakes=[...Array(120)].map(()=>({
+  x:Math.random()*c.width,
+  y:Math.random()*c.height,
+  r:Math.random()*2.5+1,
+  d:Math.random()+.5
+}));
+
+setInterval(()=>{
+  x.clearRect(0,0,c.width,c.height);
+  x.fillStyle='rgba(255,255,255,.8)';
+  x.beginPath();
+  flakes.forEach(f=>{
+    x.moveTo(f.x,f.y);
+    x.arc(f.x,f.y,f.r,0,Math.PI*2);
+    f.y+=f.d*f.d;
+    if(f.y>c.height){f.y=0;f.x=Math.random()*c.width}
+  });
+  x.fill();
+},30);
+</script>
+
+</body>
+</html>
